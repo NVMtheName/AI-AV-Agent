@@ -1,0 +1,191 @@
+# Known recurring failure patterns for enterprise AV/IT systems
+# Used by RCA engine to match against observed events
+
+patterns:
+  - pattern_id: "DHCP-EXHAUSTION"
+    name: "DHCP IP Pool Exhaustion"
+    description: "DHCP server runs out of available IP addresses"
+    symptoms:
+      - "DHCP timeout"
+      - "No IP address assigned"
+      - "DHCPDISCOVER"
+      - "address pool exhausted"
+    typical_root_cause: "DHCP scope too small or IP lease time too long causing pool exhaustion"
+    affected_systems:
+      - "network"
+      - "av_hardware"
+    frequency: "monthly"
+    recommended_actions:
+      - "Expand DHCP scope range"
+      - "Reduce lease time"
+      - "Identify and remove stale DHCP leases"
+
+  - pattern_id: "POE-BUDGET"
+    name: "PoE Power Budget Exceeded"
+    description: "Network switch runs out of available PoE power"
+    symptoms:
+      - "PoE power denied"
+      - "insufficient power"
+      - "device offline"
+      - "power budget exceeded"
+    typical_root_cause: "Too many high-power devices on switch exceeding total PoE budget"
+    affected_systems:
+      - "network"
+      - "av_hardware"
+      - "power"
+    frequency: "after_new_installations"
+    recommended_actions:
+      - "Calculate total PoE requirements per switch"
+      - "Upgrade to higher wattage PoE switch"
+      - "Redistribute devices across multiple switches"
+
+  - pattern_id: "ZOOM-AUTH-EXPIRED"
+    name: "Zoom Room Authentication Expired"
+    description: "Zoom Room controller loses authentication to Zoom cloud service"
+    symptoms:
+      - "authentication failed"
+      - "credential expired"
+      - "zoom room offline"
+      - "401 unauthorized"
+    typical_root_cause: "OAuth token expired or service account password changed without updating devices"
+    affected_systems:
+      - "av_hardware"
+      - "software"
+    frequency: "quarterly"
+    recommended_actions:
+      - "Re-authenticate Zoom Room with fresh credentials"
+      - "Check service account password expiration policy"
+      - "Implement automated token refresh"
+
+  - pattern_id: "DNS-FAILURE"
+    name: "DNS Resolution Failure"
+    description: "DNS server unreachable or not responding"
+    symptoms:
+      - "dns timeout"
+      - "name resolution failed"
+      - "cannot resolve"
+      - "dns server not responding"
+    typical_root_cause: "DNS server down, network path blocked, or incorrect DNS configuration"
+    affected_systems:
+      - "network"
+      - "software"
+    frequency: "rare"
+    recommended_actions:
+      - "Verify DNS server accessibility"
+      - "Check device DNS settings"
+      - "Test DNS resolution from affected subnet"
+      - "Review firewall rules for DNS traffic (UDP/TCP 53)"
+
+  - pattern_id: "FIRMWARE-UPDATE-FAIL"
+    name: "Failed Firmware Update"
+    description: "Device firmware update fails mid-process leaving device in bad state"
+    symptoms:
+      - "firmware update failed"
+      - "boot loop"
+      - "device unresponsive after update"
+      - "checksum mismatch"
+    typical_root_cause: "Network interruption during update, corrupted firmware file, or incompatible firmware version"
+    affected_systems:
+      - "av_hardware"
+      - "software"
+    frequency: "during_maintenance"
+    recommended_actions:
+      - "Factory reset device if possible"
+      - "Manual firmware reload via USB/serial"
+      - "Contact vendor support for recovery procedure"
+      - "Implement staged firmware rollouts"
+
+  - pattern_id: "MULTICAST-ROUTING"
+    name: "Multicast Routing Issue"
+    description: "Multicast traffic not routing correctly across VLANs"
+    symptoms:
+      - "multicast not received"
+      - "IGMP snooping"
+      - "audio/video stream loss"
+      - "PIM neighbor"
+    typical_root_cause: "Multicast routing not configured, IGMP snooping misconfigured, or PIM not enabled"
+    affected_systems:
+      - "network"
+      - "av_hardware"
+    frequency: "after_network_changes"
+    recommended_actions:
+      - "Verify multicast routing configuration"
+      - "Check IGMP snooping settings on switches"
+      - "Enable PIM on router interfaces"
+      - "Verify multicast group registration"
+
+  - pattern_id: "USB-DEVICE-DISCONNECT"
+    name: "USB Device Repeated Disconnection"
+    description: "USB peripherals (camera, speakerphone) repeatedly disconnect/reconnect"
+    symptoms:
+      - "usb device disconnected"
+      - "usb enumeration failed"
+      - "device not recognized"
+      - "usb power surge"
+    typical_root_cause: "Insufficient USB power, bad cable, USB hub overload, or driver issue"
+    affected_systems:
+      - "av_hardware"
+      - "power"
+    frequency: "intermittent"
+    recommended_actions:
+      - "Replace USB cable with high-quality cable"
+      - "Use powered USB hub"
+      - "Update USB device drivers"
+      - "Check for USB power surge errors in system logs"
+
+  - pattern_id: "CRESTRON-PROCESSOR-REBOOT"
+    name: "Crestron Control Processor Unexpected Reboot"
+    description: "Crestron control processor reboots without scheduled maintenance"
+    symptoms:
+      - "crestron offline"
+      - "processor reboot"
+      - "control system unavailable"
+      - "touch panel disconnected"
+    typical_root_cause: "Software exception, memory leak, power interruption, or overheating"
+    affected_systems:
+      - "av_hardware"
+      - "software"
+    frequency: "weekly_or_more"
+    recommended_actions:
+      - "Check Crestron error logs for exceptions"
+      - "Update firmware to latest stable version"
+      - "Review custom control program for memory leaks"
+      - "Verify cooling and ventilation around processor"
+
+  - pattern_id: "QSYS-DANTE-DROPOUT"
+    name: "Q-SYS Dante Audio Dropouts"
+    description: "Q-SYS Dante audio network experiencing dropouts or glitches"
+    symptoms:
+      - "dante error"
+      - "audio dropout"
+      - "clock sync lost"
+      - "packet loss dante"
+    typical_root_cause: "Network congestion, non-Dante traffic on audio VLAN, or timing/clock issues"
+    affected_systems:
+      - "av_hardware"
+      - "network"
+    frequency: "during_peak_usage"
+    recommended_actions:
+      - "Isolate Dante traffic on dedicated VLAN"
+      - "Enable QoS for Dante traffic (DSCP EF)"
+      - "Verify clock master configuration"
+      - "Check for network congestion and packet loss"
+      - "Update Q-SYS and Dante firmware"
+
+  - pattern_id: "CISCO-STP-TOPOLOGY-CHANGE"
+    name: "Spanning Tree Topology Changes Causing Outages"
+    description: "STP topology changes cause temporary network outages"
+    symptoms:
+      - "spanning tree topology change"
+      - "stp convergence"
+      - "link flapping"
+      - "brief network outage"
+    typical_root_cause: "Link instability, misconfigured STP, or loop in network topology"
+    affected_systems:
+      - "network"
+    frequency: "intermittent"
+    recommended_actions:
+      - "Enable BPDU guard on access ports"
+      - "Use RSTP instead of legacy STP"
+      - "Identify and fix flapping links"
+      - "Review network topology for loops"

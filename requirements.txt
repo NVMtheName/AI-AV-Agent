@@ -1,0 +1,26 @@
+# AI AV Agent - Enterprise AV/IT Root Cause Analysis System
+# Python 3.9+
+
+# Core dependencies
+pydantic>=2.0.0
+python-dateutil>=2.8.2
+pyyaml>=6.0
+regex>=2023.0.0
+
+# Data processing
+pandas>=2.0.0
+numpy>=1.24.0
+
+# Optional: For advanced log parsing
+python-json-logger>=2.0.0
+
+# Testing
+pytest>=7.4.0
+pytest-cov>=4.1.0
+
+# CLI interface
+click>=8.1.0
+rich>=13.0.0
+
+# Type checking
+mypy>=1.0.0
