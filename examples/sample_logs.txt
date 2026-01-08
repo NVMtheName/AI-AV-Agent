@@ -1,0 +1,82 @@
+# Sample AV/IT operational logs demonstrating various failure scenarios
+# These logs simulate real-world incidents from enterprise environments
+
+# Scenario 1: DHCP Exhaustion causing Zoom Room failures
+2026-01-08 08:15:23 [NETWORK] Switch-10.1.2.1: DHCP pool 'conference-vlan' utilization: 98%
+2026-01-08 08:16:45 [ZOOM] Room12-ZoomController 10.1.2.150: DHCP timeout - no IP address received
+2026-01-08 08:16:47 [ZOOM] Room12-ZoomController: Failed to connect to network - IP configuration failed
+2026-01-08 08:17:01 [ZOOM] Room12-ZoomController: Zoom Room offline - network unreachable
+2026-01-08 08:17:15 [NETWORK] Switch-10.1.2.1: DHCP DISCOVER from MAC 00:1B:63:84:45:E6 - no available addresses
+2026-01-08 08:18:30 [ZOOM] Room14-ZoomController 10.1.2.155: DHCP timeout - attempting retry
+2026-01-08 08:19:01 [ERROR] Room12 touch panel disconnected from controller
+
+# Scenario 2: PoE Budget Exceeded
+2026-01-08 09:30:12 [NETWORK] Netgear-Switch-3F: Total PoE consumption: 375W / 380W available
+2026-01-08 09:30:45 [WARNING] Netgear-Switch-3F Port 18: PoE power denied - insufficient budget
+2026-01-08 09:30:46 [CRITICAL] Room08-Camera 10.1.3.45: Device offline - power lost
+2026-01-08 09:30:50 [ERROR] Room08-ZoomController: Camera enumeration failed - USB device not found
+2026-01-08 09:31:05 [NETWORK] Netgear-Switch-3F: PoE budget exceeded - 12 devices requesting 410W total
+
+# Scenario 3: DNS Failure Cascade
+2026-01-08 11:45:00 [NETWORK] DNS Server 10.0.1.10: Service stopped - timeout
+2026-01-08 11:45:15 [ERROR] Room05-Crestron: DNS resolution failed for api.crestron.io
+2026-01-08 11:45:18 [ERROR] Room05-Crestron: Control processor unable to reach cloud services
+2026-01-08 11:45:30 [ERROR] Room07-ZoomController: Cannot resolve zoom.us - DNS timeout
+2026-01-08 11:45:32 [CRITICAL] Room07-ZoomController: Zoom Room authentication failed - network error
+2026-01-08 11:45:45 [ERROR] Room10-QSys: License server unreachable - DNS lookup failed for qsc.com
+2026-01-08 11:46:00 [WARNING] Multiple devices reporting DNS failures across building
+
+# Scenario 4: Configuration Change Impact
+2026-01-08 13:00:00 [CONFIG] Network Admin: Updated VLAN 100 settings - enabled STP BPDU guard
+2026-01-08 13:00:45 [NETWORK] Switch-Core-01: STP topology change detected on VLAN 100
+2026-01-08 13:00:50 [NETWORK] Switch-Core-01: Port Gi1/0/24 disabled - BPDU guard violation
+2026-01-08 13:00:52 [CRITICAL] Room15-ZoomController 10.1.4.88: Network link down
+2026-01-08 13:00:55 [ERROR] Room15: All AV services offline
+2026-01-08 13:01:10 [ERROR] Room16-Crestron: Network connection lost - link down
+
+# Scenario 5: Recurring Zoom Authentication Expiration
+2026-01-06 14:22:10 [ERROR] Room03-ZoomController: Authentication failed - HTTP 401 Unauthorized
+2026-01-06 14:22:15 [ZOOM] Room03: OAuth token expired - re-authentication required
+2026-01-07 09:15:30 [ERROR] Room11-ZoomController: Authentication failed - HTTP 401 Unauthorized
+2026-01-07 09:15:35 [ZOOM] Room11: OAuth token expired - re-authentication required
+2026-01-08 16:30:00 [ERROR] Room18-ZoomController: Authentication failed - HTTP 401 Unauthorized
+2026-01-08 16:30:05 [ZOOM] Room18: OAuth token expired - re-authentication required
+2026-01-08 16:30:10 [WARNING] Pattern detected: Multiple Zoom Rooms authentication failures
+
+# Scenario 6: Q-SYS Dante Network Issues
+2026-01-08 14:15:00 [QSYS] Core-110-Auditorium: Dante audio dropout detected on RX channel 4
+2026-01-08 14:15:02 [ERROR] Core-110-Auditorium: Dante clock sync lost - switching to backup
+2026-01-08 14:15:05 [NETWORK] Switch-AV-VLAN: High packet loss detected on VLAN 50: 15% loss
+2026-01-08 14:15:10 [QSYS] Core-110-Auditorium: Multiple Dante receive errors - packet loss
+2026-01-08 14:15:20 [WARNING] Dante network congestion - recommend QoS configuration
+
+# Scenario 7: Firmware Update Failure
+2026-01-08 02:00:00 [SYSTEM] Crestron-Room22: Initiating firmware update to version 2.8.1.15
+2026-01-08 02:02:30 [SYSTEM] Crestron-Room22: Downloading firmware... 45% complete
+2026-01-08 02:03:15 [ERROR] Crestron-Room22: Network timeout during firmware download
+2026-01-08 02:03:20 [CRITICAL] Crestron-Room22: Firmware update failed - device rebooting
+2026-01-08 02:03:45 [CRITICAL] Crestron-Room22: Boot loop detected - unable to start application
+2026-01-08 02:04:00 [ERROR] Crestron-Room22: Device unresponsive - firmware corruption suspected
+
+# Scenario 8: USB Device Issues
+2026-01-08 10:30:15 [USB] Room09-Computer: USB device disconnected: Logitech Rally Camera
+2026-01-08 10:30:18 [USB] Room09-Computer: USB enumeration failed - power surge detected
+2026-01-08 10:30:25 [WARNING] Room09-Computer: USB device reconnected
+2026-01-08 10:32:10 [USB] Room09-Computer: USB device disconnected: Logitech Rally Camera
+2026-01-08 10:32:15 [ERROR] Room09-Computer: Repeated USB disconnections - possible cable or power issue
+2026-01-08 10:33:30 [USB] Room09-Computer: USB device disconnected: Logitech Rally Camera
+2026-01-08 10:33:35 [CRITICAL] Room09: Camera unavailable - USB device failed
+
+# Scenario 9: Multicast Routing Problem
+2026-01-08 15:00:00 [NETWORK] Router-Core: IGMP snooping querier election - became active querier
+2026-01-08 15:00:15 [QSYS] Room20-Dante: Multicast group 239.255.1.10 - no packets received
+2026-01-08 15:00:20 [ERROR] Room20-AudioDSP: Audio stream not available - multicast timeout
+2026-01-08 15:00:30 [NETWORK] Switch-3F: IGMP membership report for 239.255.1.10 - not forwarded
+2026-01-08 15:00:45 [ERROR] Room20: Audio system offline - no source audio detected
+
+# Scenario 10: Environmental - Overheating
+2026-01-08 17:45:00 [SYSTEM] QSys-Core-Building-A: CPU temperature: 85°C - high threshold
+2026-01-08 17:46:15 [WARNING] QSys-Core-Building-A: Thermal warning - CPU temperature: 90°C
+2026-01-08 17:47:30 [CRITICAL] QSys-Core-Building-A: Thermal shutdown imminent - CPU: 95°C
+2026-01-08 17:48:00 [CRITICAL] QSys-Core-Building-A: Emergency shutdown - thermal protection
+2026-01-08 17:48:05 [ERROR] Multiple rooms (Room25, Room26, Room27): Audio system offline

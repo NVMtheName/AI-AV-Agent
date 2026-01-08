@@ -1,0 +1,162 @@
+# Vendor escalation contact information
+# Customize with your organization's specific vendor contacts and support agreements
+
+vendors:
+  - vendor_name: "Zoom Video Communications"
+    system_types:
+      - "Zoom Rooms"
+      - "Zoom Phone"
+    support_level: "Enterprise Support"
+    contact_info: "support.zoom.us | Phone: 1-888-799-9666 | Ticket portal"
+    escalation_criteria:
+      - "Multiple Zoom Rooms offline (3+)"
+      - "Authentication failures across fleet"
+      - "Critical P1 incidents affecting business operations"
+    sla_hours: 4
+
+  - vendor_name: "Crestron Electronics"
+    system_types:
+      - "Crestron Control Processors"
+      - "Touch Panels"
+      - "DM Switchers"
+    support_level: "True Blue Support"
+    contact_info: "support@crestron.com | Phone: 1-855-263-8754 | Online portal"
+    escalation_criteria:
+      - "Hardware failure requiring replacement"
+      - "Software bugs affecting multiple systems"
+      - "Programming assistance for complex issues"
+    sla_hours: 24
+
+  - vendor_name: "Q-SYS (QSC)"
+    system_types:
+      - "Q-SYS Core"
+      - "Q-SYS Peripherals"
+      - "Dante Audio"
+    support_level: "Q-SYS Advantage"
+    contact_info: "qsys.support@qsc.com | Phone: 1-800-854-4079 | Community forum"
+    escalation_criteria:
+      - "Core processor failures"
+      - "Dante network audio issues"
+      - "Design/configuration assistance"
+    sla_hours: 8
+
+  - vendor_name: "Cisco Systems"
+    system_types:
+      - "Cisco Switches"
+      - "Cisco Routers"
+      - "Webex Devices"
+    support_level: "Cisco SMARTnet"
+    contact_info: "TAC: 1-800-553-2447 | support.cisco.com"
+    escalation_criteria:
+      - "Network infrastructure down"
+      - "Switch/router hardware failure"
+      - "Software bugs or CVEs"
+    sla_hours: 2
+
+  - vendor_name: "Netgear Business"
+    system_types:
+      - "Netgear Managed Switches"
+      - "Netgear PoE Switches"
+    support_level: "ProSafe Lifetime Warranty"
+    contact_info: "business.netgear.com/support | Phone: 1-866-480-2112"
+    escalation_criteria:
+      - "Hardware failure"
+      - "PoE issues affecting multiple ports"
+    sla_hours: 48
+
+  - vendor_name: "Domotz"
+    system_types:
+      - "Domotz Monitoring Agent"
+      - "Network Monitoring"
+    support_level: "Standard Support"
+    contact_info: "support@domotz.com | help.domotz.com"
+    escalation_criteria:
+      - "Agent offline persistently"
+      - "Monitoring data not collecting"
+      - "Integration issues"
+    sla_hours: 24
+
+  - vendor_name: "Schneider Electric (EcoStruxure)"
+    system_types:
+      - "EcoStruxure Building Management"
+      - "Power Management"
+    support_level: "mySchneider Support"
+    contact_info: "ecostruxure.support@se.com | Customer portal"
+    escalation_criteria:
+      - "Power infrastructure failures"
+      - "BMS integration issues"
+      - "Critical facility alerts"
+    sla_hours: 4
+
+  - vendor_name: "Logitech (Conference Room Solutions)"
+    system_types:
+      - "Logitech Rally"
+      - "Logitech MeetUp"
+      - "Logitech Tap"
+    support_level: "Business Support"
+    contact_info: "support.logi.com/business | community.logitech.com"
+    escalation_criteria:
+      - "Camera/audio hardware failure"
+      - "USB connectivity issues"
+      - "Firmware update problems"
+    sla_hours: 24
+
+  - vendor_name: "Biamp Systems"
+    system_types:
+      - "Tesira Audio DSP"
+      - "Devio Conferencing"
+      - "Parlé Microphones"
+    support_level: "Technical Support"
+    contact_info: "support.biamp.com | Phone: 1-503-641-7287"
+    escalation_criteria:
+      - "DSP processor failures"
+      - "Audio quality issues"
+      - "Network audio problems"
+    sla_hours: 12
+
+# Internal escalation contacts
+internal_teams:
+  - team_name: "Network Operations (NetOps)"
+    responsibilities:
+      - "Network infrastructure"
+      - "DHCP/DNS services"
+      - "VLAN configuration"
+      - "PoE switches"
+    contact_info: "netops@company.com | Slack: #network-ops"
+    escalation_criteria:
+      - "Network-wide outages"
+      - "DHCP/DNS failures"
+      - "Switch/router issues"
+
+  - team_name: "AV Operations"
+    responsibilities:
+      - "Conference room AV equipment"
+      - "Video conferencing support"
+      - "Audio/visual troubleshooting"
+    contact_info: "av-ops@company.com | Slack: #av-support"
+    escalation_criteria:
+      - "Room-specific AV issues"
+      - "Equipment malfunctions"
+      - "User experience problems"
+
+  - team_name: "Facilities"
+    responsibilities:
+      - "Physical infrastructure"
+      - "Power distribution"
+      - "Environmental controls"
+    contact_info: "facilities@company.com | Slack: #facilities"
+    escalation_criteria:
+      - "Power outages"
+      - "HVAC issues affecting equipment"
+      - "Physical access to equipment"
+
+  - team_name: "IT Security"
+    responsibilities:
+      - "Firewall rules"
+      - "Service account management"
+      - "Certificate management"
+    contact_info: "security@company.com | Slack: #infosec"
+    escalation_criteria:
+      - "Authentication failures"
+      - "Certificate expiration"
+      - "Security policy blocks"
