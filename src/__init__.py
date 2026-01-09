@@ -15,11 +15,13 @@ from .models import (
     RecommendedAction,
     IncidentAnalysis
 )
+from .zoom_api_service import ZoomAPIService
 
 __all__ = [
     "AVAgent",
     "StructuredEvent",
     "RootCause",
     "RecommendedAction",
-    "IncidentAnalysis"
+    "IncidentAnalysis",
+    "ZoomAPIService"
 ]
