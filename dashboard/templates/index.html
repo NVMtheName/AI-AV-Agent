@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zoom Room Dashboard - AI AV Agent</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <h1>🎥 Zoom Room Dashboard</h1>
+                <p class="subtitle">Real-time monitoring and analytics</p>
+            </div>
+            <div class="header-actions">
+                <button id="refreshBtn" class="btn btn-primary">
+                    <span class="btn-icon">🔄</span> Refresh
+                </button>
+                <div class="last-updated">
+                    Last updated: <span id="lastUpdated">Loading...</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Health Summary Cards -->
+        <section class="summary-section">
+            <div class="card summary-card">
+                <div class="card-header">
+                    <h3>Total Rooms</h3>
+                    <span class="icon">🏢</span>
+                </div>
+                <div class="card-value" id="totalRooms">--</div>
+                <div class="card-footer">Registered rooms</div>
+            </div>
+
+            <div class="card summary-card success">
+                <div class="card-header">
+                    <h3>Available</h3>
+                    <span class="icon">✅</span>
+                </div>
+                <div class="card-value" id="availableRooms">--</div>
+                <div class="card-footer">Ready for meetings</div>
+            </div>
+
+            <div class="card summary-card info">
+                <div class="card-header">
+                    <h3>In Meeting</h3>
+                    <span class="icon">📞</span>
+                </div>
+                <div class="card-value" id="inMeetingRooms">--</div>
+                <div class="card-footer">Currently in use</div>
+            </div>
+
+            <div class="card summary-card warning">
+                <div class="card-header">
+                    <h3>Offline</h3>
+                    <span class="icon">⚠️</span>
+                </div>
+                <div class="card-value" id="offlineRooms">--</div>
+                <div class="card-footer">Needs attention</div>
+            </div>
+        </section>
+
+        <!-- Health Status Section -->
+        <section class="health-section">
+            <div class="card">
+                <div class="card-header">
+                    <h2>Health Status</h2>
+                </div>
+                <div class="health-grid" id="healthGrid">
+                    <div class="loading">Loading health data...</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Rooms List Section -->
+        <section class="rooms-section">
+            <div class="card">
+                <div class="card-header">
+                    <h2>Zoom Rooms</h2>
+                    <div class="filter-controls">
+                        <input type="text" id="searchInput" placeholder="Search rooms..." class="search-input">
+                        <select id="statusFilter" class="filter-select">
+                            <option value="">All Statuses</option>
+                            <option value="Available">Available</option>
+                            <option value="InMeeting">In Meeting</option>
+                            <option value="Offline">Offline</option>
+                            <option value="UnderConstruction">Under Construction</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="rooms-table-container">
+                    <table class="rooms-table" id="roomsTable">
+                        <thead>
+                            <tr>
+                                <th>Status</th>
+                                <th>Room Name</th>
+                                <th>Type</th>
+                                <th>Health</th>
+                                <th>Location</th>
+                                <th>Devices</th>
+                                <th>Last Active</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="roomsTableBody">
+                            <tr>
+                                <td colspan="8" class="loading">Loading rooms data...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Alerts Section -->
+        <section class="alerts-section" id="alertsSection" style="display: none;">
+            <div class="card alert-card">
+                <div class="card-header">
+                    <h2>⚠️ Active Alerts</h2>
+                </div>
+                <div id="alertsList"></div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Room Detail Modal -->
+    <div id="roomModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalRoomName">Room Details</h2>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <div class="loading">Loading room details...</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+</body>
+</html>
