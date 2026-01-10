@@ -335,6 +335,7 @@ python examples/example_usage.py
 AI-AV-Agent/
 ├── README.md                      # This file
 ├── requirements.txt               # Python dependencies
+├── compliance-check.py            # SOC 2 compliance checker
 ├── src/
 │   ├── __init__.py               # Package initialization
 │   ├── agent.py                  # Main orchestrator
@@ -342,10 +343,20 @@ AI-AV-Agent/
 │   ├── event_correlator.py       # Event correlation engine
 │   ├── rca_engine.py             # Root cause analysis engine
 │   ├── report_generator.py       # Report formatting
-│   └── models.py                 # Data models (Pydantic)
+│   ├── models.py                 # Data models (Pydantic)
+│   └── compliance/               # SOC 2 compliance module
+│       ├── audit_logger.py       # Audit logging system
+│       ├── encryption.py         # Data encryption (AES-256)
+│       ├── access_control.py     # Role-based access control
+│       └── compliance_monitor.py # Compliance monitoring
 ├── config/
 │   ├── known_patterns.yaml       # Known failure patterns
 │   └── vendor_contacts.yaml      # Vendor escalation info
+├── compliance/soc2/              # SOC 2 documentation
+│   ├── policies/                 # Security policies
+│   ├── procedures/               # Operating procedures
+│   ├── documentation/            # Control matrix & docs
+│   └── reports/                  # Compliance reports
 ├── examples/
 │   ├── sample_logs.txt           # Sample operational logs
 │   └── example_usage.py          # Usage examples
@@ -384,12 +395,203 @@ This is an expert system based on real-world operational experience. Contributio
 - Includes urgency levels
 - Explains escalation criteria
 
+## 🔒 SOC 2 Compliance
+
+AI-AV-Agent includes comprehensive SOC 2 compliance controls to meet enterprise security and compliance requirements.
+
+### Compliance Features
+
+**Security Controls:**
+- ✓ Role-Based Access Control (RBAC) with 4 defined roles
+- ✓ Comprehensive audit logging of all operations
+- ✓ AES-256 encryption for sensitive log files
+- ✓ Tamper-evident, append-only audit logs
+- ✓ File access validation and permission enforcement
+
+**Availability Controls:**
+- ✓ Error handling and resilience
+- ✓ System monitoring and health checks
+- ✓ Backup and recovery procedures
+
+**Processing Integrity:**
+- ✓ Input validation using Pydantic models
+- ✓ Evidence-based analysis (no hallucination)
+- ✓ Data gap identification
+- ✓ Processing accuracy verification
+
+**Confidentiality:**
+- ✓ Data encryption at rest
+- ✓ Secure key management
+- ✓ Access controls and authentication
+- ✓ 7-year audit log retention
+
+### User Roles
+
+AI-AV-Agent supports four security roles:
+
+| Role | Permissions | Use Case |
+|------|-------------|----------|
+| **Viewer** | Read logs and reports | Incident review, reporting |
+| **Analyst** | Execute analysis, generate reports | Daily operations, RCA work |
+| **Admin** | Full system administration | Configuration management |
+| **Auditor** | Read audit logs, compliance reports | Security audits, compliance |
+
+### Enabling Compliance Mode
+
+```python
+from src import AVAgent
+
+# Initialize with compliance controls enabled (default)
+agent = AVAgent(
+    known_patterns_path='config/known_patterns.yaml',
+    enable_compliance=True  # Enables audit logging & access control
+)
+
+# Analyze logs - all operations are automatically logged
+result = agent.analyze_from_file('logs.txt', user_query="Why did Room 12 fail?")
+```
+
+### Audit Logging
+
+All operations are automatically logged including:
+- File access (read/write operations)
+- Analysis executions
+- Configuration changes
+- Errors and security events
+- Authentication/authorization events
+
+Audit logs are stored in `logs/audit/` with:
+- Tamper-evident design (append-only)
+- 7-year retention for SOC 2 compliance
+- Automatic monthly rotation
+- JSON format for easy analysis
+
+### Data Encryption
+
+Encrypt sensitive log files:
+
+```python
+from src.compliance import encrypt_log_file, decrypt_log_file
+
+# Encrypt a log file
+encrypted_path = encrypt_log_file(
+    'sensitive_logs.txt',
+    encryption_key='your-secure-password',  # Or use AV_AGENT_ENCRYPTION_KEY env var
+    remove_original=False
+)
+
+# Decrypt when needed
+decrypted_path = decrypt_log_file(encrypted_path)
+```
+
+Features:
+- AES-256 encryption
+- Secure key derivation (PBKDF2 with 480,000 iterations)
+- Automatic key management
+- File integrity verification
+
+### Compliance Monitoring
+
+Run compliance checks to verify SOC 2 control effectiveness:
+
+```bash
+# Run compliance check
+python compliance-check.py
+
+# Generate compliance report
+python compliance-check.py --report-file compliance_report.json
+```
+
+The compliance monitor checks:
+- Audit logging functionality
+- Access control configuration
+- Encryption availability
+- Data retention compliance
+- Policy documentation completeness
+
+### SOC 2 Documentation
+
+Complete SOC 2 documentation is included:
+
+```
+compliance/soc2/
+├── policies/
+│   ├── information_security_policy.md
+│   ├── access_control_policy.md
+│   └── data_retention_disposal_policy.md
+├── procedures/
+│   └── incident_response_procedure.md
+├── documentation/
+│   └── soc2_control_matrix.md
+└── reports/
+    └── (compliance reports generated here)
+```
+
+### Data Retention
+
+AI-AV-Agent follows SOC 2 data retention requirements:
+
+| Data Type | Active Retention | Archive Retention | Total |
+|-----------|-----------------|-------------------|-------|
+| Audit Logs | 2 years | 5 years | 7 years |
+| Operational Logs | 2 years | 5 years | 7 years |
+| Analysis Reports | 3 years | N/A | 3 years |
+| Configuration Files | Indefinite | Indefinite | Indefinite |
+
+### Incident Response
+
+AI-AV-Agent includes documented incident response procedures:
+- Incident classification (P1-P4 severity levels)
+- Response phases: Detection, Containment, Eradication, Recovery
+- Post-incident analysis and reporting
+- Annual incident response drills
+
+See `compliance/soc2/procedures/incident_response_procedure.md` for details.
+
+### Compliance APIs
+
+Programmatic access to compliance features:
+
+```python
+from src.compliance import (
+    get_audit_logger,
+    get_access_control,
+    ComplianceMonitor
+)
+
+# Access audit logger
+audit_logger = get_audit_logger()
+recent_events = audit_logger.get_recent_events(limit=100)
+audit_report = audit_logger.generate_audit_report()
+
+# Check access permissions
+access_control = get_access_control()
+has_access = access_control.validate_file_access('sensitive.log', 'read')
+
+# Generate compliance report
+monitor = ComplianceMonitor()
+report = monitor.generate_compliance_report()
+```
+
 ## 🔒 Security & Privacy
 
+**General Security:**
 - No data is sent to external services
 - Runs entirely locally
+- All processing performed on-premises
+- No external API calls or data transmission
+
+**Data Protection:**
 - Sanitize logs before sharing (remove sensitive IPs, credentials)
+- Encrypt sensitive log files using AES-256
 - Review vendor contact information before committing
+- Audit logs protected with restrictive permissions (0600)
+
+**Access Control:**
+- OS-level authentication required
+- File-level permissions enforced
+- Role-based access control available
+- All access attempts logged
 
 ## 📜 License
 

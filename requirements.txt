@@ -24,3 +24,6 @@ rich>=13.0.0
 
 # Type checking
 mypy>=1.0.0
+
+# SOC 2 Compliance
+cryptography>=41.0.0  # For data encryption
