@@ -42,6 +42,7 @@ htmlcov/
 
 # Logs
 *.log
+logs/
 
 # Local configuration (customize vendor contacts, patterns)
 config/local_*.yaml
@@ -53,9 +54,16 @@ reports/
 *.md
 !README.md
 !examples/*.txt
+!compliance/soc2/**/*.md  # Allow SOC 2 policy documentation
 
 # Sensitive data
 credentials.json
 secrets/
 *.key
 *.pem
+.encryption_key
+
+# Compliance data (keep policies/procedures, exclude reports/audit logs)
+logs/audit/
+compliance/soc2/reports/*.json
+compliance/soc2/evidence/
