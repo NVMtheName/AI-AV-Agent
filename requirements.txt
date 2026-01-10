@@ -11,6 +11,9 @@ regex>=2023.0.0
 pandas>=2.0.0
 numpy>=1.24.0
 
+# Database (for ingestion pipeline)
+psycopg2-binary>=2.9.9
+
 # Optional: For advanced log parsing
 python-json-logger>=2.0.0
 

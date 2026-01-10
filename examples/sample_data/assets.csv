@@ -1,0 +1,9 @@
+asset_id,asset_type,make,model,serial,ip,mac,hostname,room,building,floor,site,firmware_version,status
+ZR-CR-101,codec,Zoom,Zoom Rooms Controller,ZRC-ABC123,10.1.5.50,00:11:22:33:44:55,zr-cr-101,CR-101,Building-A,1,HQ,5.14.0,active
+ZR-CR-205,codec,Zoom,Zoom Rooms Controller,ZRC-DEF456,10.1.5.60,00:11:22:33:44:66,zr-cr-205,CR-205,Building-A,2,HQ,5.14.0,active
+ZR-CR-305,codec,Zoom,Zoom Rooms Controller,ZRC-GHI789,10.1.5.70,00:11:22:33:44:77,zr-cr-305,CR-305,Building-B,3,HQ,5.13.5,active
+QSYS-CR-101,dsp,QSC,Q-SYS Core-110f,QSYS-XYZ123,10.1.5.51,00:11:22:33:55:11,qsys-core-101,CR-101,Building-A,1,HQ,9.8.1,active
+CAM-CR-101,camera,Logitech,Rally Camera,CAM-AAA111,,00:11:22:44:11:11,,CR-101,Building-A,1,HQ,,active
+CAM-CR-305,camera,Logitech,Rally Camera,CAM-BBB222,,00:11:22:44:22:22,,CR-305,Building-B,3,HQ,,active
+SW-CR-101,switch,Cisco,Catalyst 2960X,SW-123ABC,10.1.1.10,,switch-cr-101,CR-101,Building-A,1,HQ,15.2.7,active
+SW-CR-205,switch,Cisco,Catalyst 2960X,SW-456DEF,10.1.1.20,,switch-cr-205,CR-205,Building-A,2,HQ,15.2.7,active

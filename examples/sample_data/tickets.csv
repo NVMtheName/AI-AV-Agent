@@ -1,0 +1,6 @@
+ticket_id,created_at,status,priority,category,title,description,room,building,assigned_to,assigned_team
+INC0012345,2026-01-08 08:31:45,open,high,av_hardware,Zoom Room offline in CR-205,Users unable to join meetings - Zoom Room shows offline status,CR-205,Building-A,john.doe,AV Operations
+INC0012346,2026-01-08 09:00:34,in_progress,medium,av_hardware,Camera not working in CR-305,Camera not detected by Zoom Rooms system,CR-305,Building-B,jane.smith,AV Operations
+INC0012347,2026-01-08 08:45:23,open,critical,network,PoE power issue on switch,Multiple devices offline due to insufficient PoE budget,,,mike.jones,Network Team
+INC0012348,2026-01-08 10:30:12,resolved,low,user_action,How to start a meeting,User training request,CR-101,Building-A,support,Help Desk
+INC0012349,2026-01-08 10:00:00,resolved,medium,vendor_service,Zoom authentication issues,Intermittent authentication failures across multiple rooms,,,admin,AV Operations
