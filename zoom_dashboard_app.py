@@ -3,18 +3,24 @@ Zoom Room Dashboard - Flask Web Application
 Provides real-time monitoring of Zoom Rooms status, health, and metrics
 """
 
-from flask import Flask, jsonify, render_template, request
+from flask import Flask, jsonify, render_template, request, Response
 from flask_cors import CORS
 from src.zoom_api_service import ZoomAPIService
+from src.utilization_analyzer import UtilizationAnalyzer
+from src.utilization_recommendation_engine import UtilizationRecommendationEngine
 from datetime import datetime, timedelta
 import os
+import csv
+import io
 from typing import Dict, Any
 
 app = Flask(__name__, template_folder='dashboard/templates', static_folder='dashboard/static')
 CORS(app)
 
-# Initialize Zoom API service
+# Initialize services
 zoom_service = None
+utilization_analyzer = None
+recommendation_engine = None
 
 
 def get_zoom_service() -> ZoomAPIService:
@@ -23,6 +29,30 @@ def get_zoom_service() -> ZoomAPIService:
     if zoom_service is None:
         zoom_service = ZoomAPIService()
     return zoom_service
+
+
+def get_utilization_analyzer() -> UtilizationAnalyzer:
+    """Get or create utilization analyzer instance"""
+    global utilization_analyzer
+    if utilization_analyzer is None:
+        db_connection_string = os.getenv(
+            'DATABASE_URL',
+            'postgresql://user:password@localhost:5432/ai_av_agent'
+        )
+        utilization_analyzer = UtilizationAnalyzer(db_connection_string)
+    return utilization_analyzer
+
+
+def get_recommendation_engine() -> UtilizationRecommendationEngine:
+    """Get or create recommendation engine instance"""
+    global recommendation_engine
+    if recommendation_engine is None:
+        db_connection_string = os.getenv(
+            'DATABASE_URL',
+            'postgresql://user:password@localhost:5432/ai_av_agent'
+        )
+        recommendation_engine = UtilizationRecommendationEngine(db_connection_string)
+    return recommendation_engine
 
 
 # ==================== API Endpoints ====================
@@ -479,12 +509,483 @@ def get_full_room_data(room_id: str):
         }), 500
 
 
+# ==================== Utilization Analytics API Endpoints ====================
+
+@app.route('/api/utilization/summary', methods=['GET'])
+def get_utilization_summary():
+    """
+    Get utilization summary across all rooms
+    Query params:
+        - from_date: Start date (YYYY-MM-DD, default: 30 days ago)
+        - to_date: End date (YYYY-MM-DD, default: today)
+        - room_id: Optional room filter
+    """
+    try:
+        analyzer = get_utilization_analyzer()
+
+        to_date = datetime.strptime(
+            request.args.get('to_date', datetime.now().strftime('%Y-%m-%d')),
+            '%Y-%m-%d'
+        )
+        from_date = datetime.strptime(
+            request.args.get(
+                'from_date',
+                (datetime.now() - timedelta(days=30)).strftime('%Y-%m-%d')
+            ),
+            '%Y-%m-%d'
+        )
+        room_id = request.args.get('room_id')
+
+        summary = analyzer.get_utilization_summary(from_date, to_date, room_id)
+
+        return jsonify({
+            'success': True,
+            'data': summary,
+            'timestamp': datetime.now().isoformat()
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+@app.route('/api/utilization/rooms/<room_id>/daily', methods=['GET'])
+def get_room_daily_utilization(room_id: str):
+    """
+    Get daily utilization data for a specific room
+    Query params:
+        - from_date: Start date (YYYY-MM-DD, default: 30 days ago)
+        - to_date: End date (YYYY-MM-DD, default: today)
+    """
+    try:
+        analyzer = get_utilization_analyzer()
+
+        to_date = request.args.get('to_date', datetime.now().strftime('%Y-%m-%d'))
+        from_date = request.args.get(
+            'from_date',
+            (datetime.now() - timedelta(days=30)).strftime('%Y-%m-%d')
+        )
+
+        conn = analyzer._get_connection()
+        try:
+            from psycopg2.extras import RealDictCursor
+            with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                cur.execute("""
+                    SELECT
+                        date,
+                        room_name,
+                        building,
+                        total_scheduled_hours,
+                        total_actual_hours,
+                        scheduled_utilization_rate,
+                        actual_utilization_rate,
+                        total_scheduled_meetings,
+                        total_completed_meetings,
+                        total_no_shows,
+                        total_ghost_bookings,
+                        no_show_rate,
+                        avg_participants_per_meeting,
+                        peak_hour_start,
+                        peak_hour_meetings
+                    FROM room_utilization_daily
+                    WHERE room_id = %s
+                        AND date BETWEEN %s AND %s
+                    ORDER BY date ASC
+                """, (room_id, from_date, to_date))
+
+                daily_data = cur.fetchall()
+
+                return jsonify({
+                    'success': True,
+                    'data': daily_data,
+                    'count': len(daily_data),
+                    'date_range': {'from': from_date, 'to': to_date},
+                    'timestamp': datetime.now().isoformat()
+                })
+        finally:
+            conn.close()
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+@app.route('/api/utilization/rooms/<room_id>/hourly', methods=['GET'])
+def get_room_hourly_utilization(room_id: str):
+    """
+    Get hourly utilization data for heatmap visualization
+    Query params:
+        - from_date: Start date (YYYY-MM-DD, default: 30 days ago)
+        - to_date: End date (YYYY-MM-DD, default: today)
+    """
+    try:
+        analyzer = get_utilization_analyzer()
+
+        to_date = request.args.get('to_date', datetime.now().strftime('%Y-%m-%d'))
+        from_date = request.args.get(
+            'from_date',
+            (datetime.now() - timedelta(days=30)).strftime('%Y-%m-%d')
+        )
+
+        conn = analyzer._get_connection()
+        try:
+            from psycopg2.extras import RealDictCursor
+            with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                cur.execute("""
+                    SELECT
+                        date,
+                        hour,
+                        room_name,
+                        hourly_utilization_rate,
+                        total_meetings,
+                        total_minutes_actual,
+                        is_business_hour
+                    FROM room_utilization_hourly
+                    WHERE room_id = %s
+                        AND date BETWEEN %s AND %s
+                    ORDER BY date ASC, hour ASC
+                """, (room_id, from_date, to_date))
+
+                hourly_data = cur.fetchall()
+
+                return jsonify({
+                    'success': True,
+                    'data': hourly_data,
+                    'count': len(hourly_data),
+                    'date_range': {'from': from_date, 'to': to_date},
+                    'timestamp': datetime.now().isoformat()
+                })
+        finally:
+            conn.close()
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+@app.route('/api/utilization/heatmap', methods=['GET'])
+def get_utilization_heatmap():
+    """
+    Get heatmap data for all rooms
+    Query params:
+        - from_date: Start date (YYYY-MM-DD, default: 7 days ago)
+        - to_date: End date (YYYY-MM-DD, default: today)
+        - building: Optional building filter
+    """
+    try:
+        analyzer = get_utilization_analyzer()
+
+        to_date = request.args.get('to_date', datetime.now().strftime('%Y-%m-%d'))
+        from_date = request.args.get(
+            'from_date',
+            (datetime.now() - timedelta(days=7)).strftime('%Y-%m-%d')
+        )
+        building = request.args.get('building')
+
+        conn = analyzer._get_connection()
+        try:
+            from psycopg2.extras import RealDictCursor
+            with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                where_clause = "WHERE date BETWEEN %s AND %s"
+                params = [from_date, to_date]
+
+                if building:
+                    where_clause += " AND building = %s"
+                    params.append(building)
+
+                cur.execute(f"""
+                    SELECT
+                        room_id,
+                        room_name,
+                        building,
+                        date,
+                        hour,
+                        hourly_utilization_rate,
+                        total_meetings,
+                        is_business_hour
+                    FROM room_utilization_hourly
+                    {where_clause}
+                    ORDER BY room_name ASC, date ASC, hour ASC
+                """, params)
+
+                heatmap_data = cur.fetchall()
+
+                return jsonify({
+                    'success': True,
+                    'data': heatmap_data,
+                    'count': len(heatmap_data),
+                    'date_range': {'from': from_date, 'to': to_date},
+                    'timestamp': datetime.now().isoformat()
+                })
+        finally:
+            conn.close()
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+@app.route('/api/utilization/ranking', methods=['GET'])
+def get_room_ranking():
+    """
+    Get room ranking by utilization
+    Query params:
+        - from_date: Start date (YYYY-MM-DD, default: 30 days ago)
+        - to_date: End date (YYYY-MM-DD, default: today)
+        - building: Optional building filter
+    """
+    try:
+        analyzer = get_utilization_analyzer()
+
+        to_date = datetime.strptime(
+            request.args.get('to_date', datetime.now().strftime('%Y-%m-%d')),
+            '%Y-%m-%d'
+        )
+        from_date = datetime.strptime(
+            request.args.get(
+                'from_date',
+                (datetime.now() - timedelta(days=30)).strftime('%Y-%m-%d')
+            ),
+            '%Y-%m-%d'
+        )
+        building = request.args.get('building')
+
+        ranking = analyzer.get_room_ranking(from_date, to_date, building)
+
+        return jsonify({
+            'success': True,
+            'data': ranking,
+            'count': len(ranking),
+            'date_range': {
+                'from': from_date.strftime('%Y-%m-%d'),
+                'to': to_date.strftime('%Y-%m-%d')
+            },
+            'timestamp': datetime.now().isoformat()
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+@app.route('/api/utilization/rooms/<room_id>/peak-times', methods=['GET'])
+def get_room_peak_times(room_id: str):
+    """
+    Get peak usage times for a specific room
+    Query params:
+        - from_date: Start date (YYYY-MM-DD, default: 30 days ago)
+        - to_date: End date (YYYY-MM-DD, default: today)
+    """
+    try:
+        analyzer = get_utilization_analyzer()
+
+        to_date = datetime.strptime(
+            request.args.get('to_date', datetime.now().strftime('%Y-%m-%d')),
+            '%Y-%m-%d'
+        )
+        from_date = datetime.strptime(
+            request.args.get(
+                'from_date',
+                (datetime.now() - timedelta(days=30)).strftime('%Y-%m-%d')
+            ),
+            '%Y-%m-%d'
+        )
+
+        peak_times = analyzer.find_peak_usage_times(room_id, from_date, to_date)
+
+        return jsonify({
+            'success': True,
+            'data': peak_times,
+            'date_range': {
+                'from': from_date.strftime('%Y-%m-%d'),
+                'to': to_date.strftime('%Y-%m-%d')
+            },
+            'timestamp': datetime.now().isoformat()
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+@app.route('/api/utilization/recommendations', methods=['GET'])
+def get_utilization_recommendations():
+    """
+    Get utilization optimization recommendations
+    Query params:
+        - room_id: Optional room filter
+        - priority: Optional priority filter (low, medium, high, critical)
+    """
+    try:
+        engine = get_recommendation_engine()
+
+        room_id = request.args.get('room_id')
+        priority = request.args.get('priority')
+
+        recommendations = engine.get_active_recommendations(room_id, priority)
+
+        return jsonify({
+            'success': True,
+            'data': recommendations,
+            'count': len(recommendations),
+            'timestamp': datetime.now().isoformat()
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+@app.route('/api/utilization/recommendations/generate', methods=['POST'])
+def generate_recommendations():
+    """
+    Generate new recommendations based on recent data
+    JSON body params:
+        - from_date: Start date (YYYY-MM-DD, default: 30 days ago)
+        - to_date: End date (YYYY-MM-DD, default: today)
+        - min_days: Minimum days of data (default: 20)
+    """
+    try:
+        engine = get_recommendation_engine()
+        data = request.get_json() or {}
+
+        to_date = datetime.strptime(
+            data.get('to_date', datetime.now().strftime('%Y-%m-%d')),
+            '%Y-%m-%d'
+        )
+        from_date = datetime.strptime(
+            data.get(
+                'from_date',
+                (datetime.now() - timedelta(days=30)).strftime('%Y-%m-%d')
+            ),
+            '%Y-%m-%d'
+        )
+        min_days = data.get('min_days', 20)
+
+        recommendations = engine.generate_all_recommendations(
+            from_date, to_date, min_days
+        )
+
+        # Store recommendations in database
+        engine.store_recommendations(recommendations, from_date, to_date)
+
+        return jsonify({
+            'success': True,
+            'data': {
+                'recommendations_generated': len(recommendations),
+                'analysis_period': {
+                    'from': from_date.strftime('%Y-%m-%d'),
+                    'to': to_date.strftime('%Y-%m-%d')
+                }
+            },
+            'timestamp': datetime.now().isoformat()
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+@app.route('/api/utilization/export', methods=['GET'])
+def export_utilization_data():
+    """
+    Export utilization data as CSV
+    Query params:
+        - from_date: Start date (YYYY-MM-DD, default: 30 days ago)
+        - to_date: End date (YYYY-MM-DD, default: today)
+        - room_id: Optional room filter
+        - format: Export format (csv, default: csv)
+    """
+    try:
+        analyzer = get_utilization_analyzer()
+
+        to_date = request.args.get('to_date', datetime.now().strftime('%Y-%m-%d'))
+        from_date = request.args.get(
+            'from_date',
+            (datetime.now() - timedelta(days=30)).strftime('%Y-%m-%d')
+        )
+        room_id = request.args.get('room_id')
+
+        conn = analyzer._get_connection()
+        try:
+            from psycopg2.extras import RealDictCursor
+            with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                where_clause = "WHERE date BETWEEN %s AND %s"
+                params = [from_date, to_date]
+
+                if room_id:
+                    where_clause += " AND room_id = %s"
+                    params.append(room_id)
+
+                cur.execute(f"""
+                    SELECT
+                        room_id,
+                        room_name,
+                        building,
+                        date,
+                        total_scheduled_hours,
+                        total_actual_hours,
+                        scheduled_utilization_rate,
+                        actual_utilization_rate,
+                        total_scheduled_meetings,
+                        total_completed_meetings,
+                        total_no_shows,
+                        no_show_rate,
+                        total_ghost_bookings,
+                        total_early_departures,
+                        avg_participants_per_meeting
+                    FROM room_utilization_daily
+                    {where_clause}
+                    ORDER BY date DESC, room_name ASC
+                """, params)
+
+                data = cur.fetchall()
+
+                # Create CSV
+                output = io.StringIO()
+                if data:
+                    writer = csv.DictWriter(output, fieldnames=data[0].keys())
+                    writer.writeheader()
+                    writer.writerows(data)
+
+                # Create response
+                response = Response(
+                    output.getvalue(),
+                    mimetype='text/csv',
+                    headers={
+                        'Content-Disposition': f'attachment; filename=utilization_report_{from_date}_to_{to_date}.csv'
+                    }
+                )
+                return response
+        finally:
+            conn.close()
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
 # ==================== Web UI Routes ====================
 
 @app.route('/')
 def index():
     """Main dashboard page"""
     return render_template('index.html')
+
+
+@app.route('/utilization')
+def utilization_dashboard():
+    """Utilization analytics dashboard page"""
+    return render_template('utilization.html')
 
 
 @app.route('/room/<room_id>')
