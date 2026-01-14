@@ -1,0 +1,6 @@
+change_id,change_type,scheduled_at,executed_at,completed_at,status,target_type,target_identifier,change_description,changed_by,previous_version,new_version,room,risk_level
+CHG0054321,firmware_update,2026-01-07 22:00:00,2026-01-07 22:05:12,2026-01-07 22:45:34,completed,device,10.1.5.50,Upgrade Zoom Rooms Controller firmware,ops_team,5.13.5,5.14.0,CR-101,medium
+CHG0054322,config_change,2026-01-08 06:00:00,2026-01-08 06:02:15,2026-01-08 06:05:23,completed,network,switch-cr-205,Update DHCP pool size for conference VLAN,network_admin,100 addresses,200 addresses,,low
+CHG0054323,firmware_update,2026-01-08 02:00:00,2026-01-08 02:10:45,2026-01-08 02:55:12,completed,device,qsys-core-101,Upgrade Q-SYS Core to 9.8.1,ops_team,9.7.2,9.8.1,CR-101,high
+CHG0054324,hardware_replacement,2026-01-08 09:30:00,,,scheduled,device,camera-cr-305,Replace faulty camera in CR-305,field_tech,,,,medium
+CHG0054325,config_change,2026-01-08 10:15:00,2026-01-08 10:16:23,2026-01-08 10:18:45,completed,device,meraki-ap-floor3,Update WiFi SSID configuration,network_admin,,,Building-A,low
