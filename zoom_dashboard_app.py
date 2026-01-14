@@ -57,9 +57,15 @@ def get_recommendation_engine() -> UtilizationRecommendationEngine:
 
 # ==================== API Endpoints ====================
 
+@app.route('/health', methods=['GET'])
+def health():
+    """Simple health check endpoint for Render"""
+    return jsonify({'status': 'ok'})
+
+
 @app.route('/api/health', methods=['GET'])
 def health_check():
-    """Health check endpoint"""
+    """Detailed health check endpoint"""
     return jsonify({
         'status': 'healthy',
         'service': 'Zoom Room Dashboard',
@@ -1034,7 +1040,8 @@ if __name__ == '__main__':
         exit(1)
 
     # Run the Flask app
-    port = int(os.getenv('DASHBOARD_PORT', 5000))
+    # Read PORT from environment (Render uses PORT, local dev can use DASHBOARD_PORT)
+    port = int(os.getenv('PORT', os.getenv('DASHBOARD_PORT', 5000)))
     debug = os.getenv('FLASK_DEBUG', 'False').lower() == 'true'
 
     print(f"\n🚀 Starting Zoom Room Dashboard on http://localhost:{port}")
