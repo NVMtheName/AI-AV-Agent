@@ -651,3 +651,260 @@ class ZoomAPIService:
                 })
 
         return summary
+
+    # ==================== Meeting & Utilization Methods ====================
+
+    def get_past_meetings_for_user(self, user_id: str, from_date: str, to_date: str,
+                                   meeting_type: str = 'scheduled',
+                                   page_size: int = 30) -> List[Dict[str, Any]]:
+        """
+        Get past meetings for a specific user (useful for getting room-based meetings)
+
+        Args:
+            user_id: User ID or email address
+            from_date: Start date (YYYY-MM-DD)
+            to_date: End date (YYYY-MM-DD)
+            meeting_type: Type of meetings (scheduled, live, upcoming, etc.)
+            page_size: Number of meetings per page
+
+        Returns:
+            List of past meeting objects
+        """
+        all_meetings = []
+        next_page_token = None
+
+        while True:
+            params = {
+                'from': from_date,
+                'to': to_date,
+                'type': meeting_type,
+                'page_size': page_size
+            }
+            if next_page_token:
+                params['next_page_token'] = next_page_token
+
+            response = self._make_request(f'/users/{user_id}/meetings', params=params)
+            all_meetings.extend(response.get('meetings', []))
+
+            next_page_token = response.get('next_page_token')
+            if not next_page_token:
+                break
+
+        return all_meetings
+
+    def get_past_meeting_details(self, meeting_id: str) -> Dict[str, Any]:
+        """
+        Get detailed information about a past meeting
+
+        Args:
+            meeting_id: Meeting ID or UUID
+
+        Returns:
+            Detailed meeting information
+        """
+        return self._make_request(f'/past_meetings/{meeting_id}')
+
+    def get_past_meeting_participants(self, meeting_id: str,
+                                     page_size: int = 30) -> List[Dict[str, Any]]:
+        """
+        Get list of participants for a past meeting
+
+        Args:
+            meeting_id: Meeting ID or UUID
+            page_size: Number of participants per page
+
+        Returns:
+            List of participant objects with join/leave times and details
+        """
+        all_participants = []
+        next_page_token = None
+
+        while True:
+            params = {'page_size': page_size}
+            if next_page_token:
+                params['next_page_token'] = next_page_token
+
+            response = self._make_request(f'/past_meetings/{meeting_id}/participants',
+                                        params=params)
+            all_participants.extend(response.get('participants', []))
+
+            next_page_token = response.get('next_page_token')
+            if not next_page_token:
+                break
+
+        return all_participants
+
+    def get_meeting_instances(self, meeting_id: str) -> List[Dict[str, Any]]:
+        """
+        Get all instances of a recurring meeting
+
+        Args:
+            meeting_id: Meeting ID
+
+        Returns:
+            List of meeting instances
+        """
+        response = self._make_request(f'/past_meetings/{meeting_id}/instances')
+        return response.get('meetings', [])
+
+    def list_report_meetings(self, from_date: str, to_date: str,
+                            page_size: int = 30, meeting_type: str = 'past') -> List[Dict[str, Any]]:
+        """
+        Get report of all meetings in the account for a date range
+
+        Args:
+            from_date: Start date (YYYY-MM-DD)
+            to_date: End date (YYYY-MM-DD)
+            page_size: Number of meetings per page
+            meeting_type: Type of meetings (past, pastOne, pastJoined)
+
+        Returns:
+            List of meeting report objects
+        """
+        all_meetings = []
+        next_page_token = None
+
+        while True:
+            params = {
+                'from': from_date,
+                'to': to_date,
+                'type': meeting_type,
+                'page_size': page_size
+            }
+            if next_page_token:
+                params['next_page_token'] = next_page_token
+
+            response = self._make_request('/report/users', params=params)
+            all_meetings.extend(response.get('users', []))
+
+            next_page_token = response.get('next_page_token')
+            if not next_page_token:
+                break
+
+        return all_meetings
+
+    def get_daily_report(self, report_year: int, report_month: int) -> Dict[str, Any]:
+        """
+        Get daily usage report for a specific month
+
+        Args:
+            report_year: Year (YYYY)
+            report_month: Month (1-12)
+
+        Returns:
+            Daily usage report
+        """
+        params = {
+            'year': report_year,
+            'month': report_month
+        }
+        return self._make_request('/report/daily', params=params)
+
+    def get_meeting_report(self, from_date: str, to_date: str,
+                          page_size: int = 30) -> List[Dict[str, Any]]:
+        """
+        Get detailed meeting report including room information
+
+        Args:
+            from_date: Start date (YYYY-MM-DD)
+            to_date: End date (YYYY-MM-DD)
+            page_size: Number of meetings per page
+
+        Returns:
+            List of meeting report objects with details
+        """
+        all_meetings = []
+        next_page_token = None
+
+        while True:
+            params = {
+                'from': from_date,
+                'to': to_date,
+                'page_size': page_size
+            }
+            if next_page_token:
+                params['next_page_token'] = next_page_token
+
+            response = self._make_request('/report/meetings', params=params)
+            all_meetings.extend(response.get('meetings', []))
+
+            next_page_token = response.get('next_page_token')
+            if not next_page_token:
+                break
+
+        return all_meetings
+
+    def get_account_meetings_report(self, from_date: str, to_date: str) -> Dict[str, Any]:
+        """
+        Get account-level meetings report for analytics
+
+        Args:
+            from_date: Start date (YYYY-MM-DD)
+            to_date: End date (YYYY-MM-DD)
+
+        Returns:
+            Account meetings summary with statistics
+        """
+        params = {
+            'from': from_date,
+            'to': to_date
+        }
+        return self._make_request('/metrics/meetings', params=params)
+
+    def get_room_past_meetings(self, room_id: str, from_date: str, to_date: str,
+                               page_size: int = 30) -> List[Dict[str, Any]]:
+        """
+        Get past meetings that occurred in a specific Zoom Room
+
+        Args:
+            room_id: Zoom Room ID
+            from_date: Start date (YYYY-MM-DD)
+            to_date: End date (YYYY-MM-DD)
+            page_size: Number of meetings per page
+
+        Returns:
+            List of meetings held in this room
+        """
+        # Get room events which include meeting information
+        events = self.get_room_events(room_id, from_date, to_date, page_size)
+
+        # Filter for meeting-related events
+        meeting_events = []
+        for event in events:
+            event_type = event.get('event_type', '')
+            if 'meeting' in event_type.lower() or 'call' in event_type.lower():
+                meeting_events.append(event)
+
+        return meeting_events
+
+    # ==================== Calendar Integration Methods ====================
+
+    def get_room_calendar_service(self, room_id: str) -> Dict[str, Any]:
+        """
+        Get calendar integration service details for a room
+
+        Args:
+            room_id: Zoom Room ID
+
+        Returns:
+            Calendar service configuration
+        """
+        return self._make_request(f'/rooms/{room_id}/calendar')
+
+    def list_calendar_events(self, calendar_id: str, from_date: str, to_date: str) -> List[Dict[str, Any]]:
+        """
+        List calendar events for a specific calendar (if integrated)
+
+        Args:
+            calendar_id: Calendar ID
+            from_date: Start date (YYYY-MM-DD)
+            to_date: End date (YYYY-MM-DD)
+
+        Returns:
+            List of calendar events
+        """
+        params = {
+            'from': from_date,
+            'to': to_date
+        }
+        return self._make_request(f'/rooms/calendar/{calendar_id}/events', params=params)
