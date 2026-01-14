@@ -44,9 +44,17 @@ You'll need a Zoom Server-to-Server OAuth app:
 
 Your Zoom app needs these scopes:
 
+**Essential Scopes:**
 - `dashboard_zr:read:admin` - Read Zoom Rooms dashboard data
 - `room:read:admin` - Read Zoom Rooms information
 - `metrics:read:admin` - Read quality metrics and QoS data
+
+**Additional Scopes (for full functionality):**
+- `room:write:admin` - Update Zoom Room settings
+- `workspace:read:admin` - Read workspace information
+- `workspace:write:admin` - Manage workspace settings (if needed)
+
+**Note:** At minimum, you need the three essential scopes for basic monitoring. Add additional scopes only if you plan to use room/workspace management features.
 
 ## Installation
 
@@ -105,6 +113,8 @@ from src import ZoomAPIService
 # Initialize service (reads from environment variables)
 zoom = ZoomAPIService()
 
+# ========== Basic Room Operations ==========
+
 # Get all Zoom Rooms
 rooms = zoom.get_zoom_rooms()
 
@@ -114,11 +124,69 @@ room_details = zoom.get_room_details(room_id='abc123')
 # Get device information
 devices = zoom.get_room_devices(room_id='abc123')
 
+# Get comprehensive room data (all endpoints combined)
+full_data = zoom.get_full_room_data(
+    room_id='abc123',
+    include_settings=True,
+    include_events=True,
+    include_issues=True,
+    date_range_days=7
+)
+
+# ========== Room Settings ==========
+
+# Get room settings
+settings = zoom.get_room_settings(room_id='abc123')
+
+# Update room settings
+updated_settings = zoom.update_room_settings(
+    room_id='abc123',
+    settings={'meeting': {'auto_start': True}}
+)
+
+# ========== Room Events & Issues ==========
+
+# Get room events
+events = zoom.get_room_events(
+    room_id='abc123',
+    from_date='2024-01-01',
+    to_date='2024-01-07'
+)
+
+# Get room issues/problems
+issues = zoom.get_room_issues(
+    room_id='abc123',
+    from_date='2024-01-01',
+    to_date='2024-01-07'
+)
+
+# ========== Locations & Workspaces ==========
+
+# Get all locations
+locations = zoom.get_all_locations()
+
+# Get location details
+location = zoom.get_room_location(location_id='loc123')
+
+# Get all workspaces
+workspaces = zoom.get_workspaces()
+
+# Get workspace details
+workspace = zoom.get_workspace_details(workspace_id='ws123')
+
+# Get workspace settings
+ws_settings = zoom.get_workspace_settings(workspace_id='ws123')
+
+# ========== Dashboard & Metrics ==========
+
 # Get dashboard metrics
 dashboard = zoom.get_zoom_rooms_dashboard()
 
 # Get health summary
 summary = zoom.get_room_health_summary()
+
+# Get comprehensive status for all rooms
+comprehensive_status = zoom.get_comprehensive_room_status()
 
 # Get room metrics (last 7 days)
 metrics = zoom.get_room_metrics(
@@ -126,6 +194,8 @@ metrics = zoom.get_room_metrics(
     from_date='2024-01-01',
     to_date='2024-01-07'
 )
+
+# ========== Meeting Quality & QoS ==========
 
 # Get meeting quality data
 quality = zoom.get_meeting_quality(meeting_id='meeting123')
@@ -146,6 +216,35 @@ GET /api/health
 GET /api/zoom/rooms                    # List all rooms
 GET /api/zoom/rooms?detailed=true      # List with full details
 GET /api/zoom/rooms/<room_id>          # Get specific room details
+GET /api/zoom/rooms/<room_id>/full     # Get comprehensive room data
+```
+
+### Room Settings
+```
+GET   /api/zoom/rooms/<room_id>/settings              # Get room settings
+PATCH /api/zoom/rooms/<room_id>/settings              # Update room settings
+GET   /api/zoom/rooms/<room_id>/settings?setting_type=meeting  # Filter by type
+```
+
+### Room Events & Issues
+```
+GET /api/zoom/rooms/<room_id>/events   # Get room events (date range)
+GET /api/zoom/rooms/<room_id>/issues   # Get room issues (date range)
+```
+
+### Locations
+```
+GET /api/zoom/locations                # List all locations
+GET /api/zoom/locations/<location_id>  # Get location details
+GET /api/zoom/locations?parent_location_id=<id>  # Filter by parent
+GET /api/zoom/locations?location_type=building   # Filter by type
+```
+
+### Workspaces
+```
+GET /api/zoom/workspaces                           # List all workspaces
+GET /api/zoom/workspaces/<workspace_id>            # Get workspace details
+GET /api/zoom/workspaces/<workspace_id>/settings   # Get workspace settings
 ```
 
 ### Dashboard & Metrics
@@ -164,13 +263,26 @@ GET /api/zoom/meetings/<meeting_id>/qos?participant_id=<id>  # Participant QoS
 
 ### Query Parameters
 
-**Room Metrics Endpoint**:
+**Room Full Data Endpoint**:
+- `include_settings`: Include settings (default: true)
+- `include_events`: Include events (default: false)
+- `include_issues`: Include issues (default: false)
+- `date_range_days`: Days to look back (default: 7)
+
+Example:
+```
+GET /api/zoom/rooms/abc123/full?include_events=true&include_issues=true&date_range_days=30
+```
+
+**Room Metrics/Events/Issues Endpoints**:
 - `from_date`: Start date (YYYY-MM-DD, default: 7 days ago)
 - `to_date`: End date (YYYY-MM-DD, default: today)
 
 Example:
 ```
 GET /api/zoom/rooms/abc123/metrics?from_date=2024-01-01&to_date=2024-01-07
+GET /api/zoom/rooms/abc123/events?from_date=2024-01-01&to_date=2024-01-07
+GET /api/zoom/rooms/abc123/issues?from_date=2024-01-01&to_date=2024-01-07
 ```
 
 ## Dashboard Features

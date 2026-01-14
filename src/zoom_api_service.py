@@ -177,6 +177,197 @@ class ZoomAPIService:
         """
         return self._make_request(f'/rooms/locations/{location_id}')
 
+    def get_all_locations(self, parent_location_id: Optional[str] = None,
+                          location_type: Optional[str] = None,
+                          page_size: int = 30) -> List[Dict[str, Any]]:
+        """
+        Get list of all locations in the account
+
+        Args:
+            parent_location_id: Filter by parent location ID
+            location_type: Filter by location type (e.g., 'building', 'floor')
+            page_size: Number of locations per page (max 300)
+
+        Returns:
+            List of location objects
+        """
+        all_locations = []
+        next_page_token = None
+
+        while True:
+            params = {'page_size': page_size}
+            if parent_location_id:
+                params['parent_location_id'] = parent_location_id
+            if location_type:
+                params['type'] = location_type
+            if next_page_token:
+                params['next_page_token'] = next_page_token
+
+            response = self._make_request('/rooms/locations', params=params)
+            all_locations.extend(response.get('locations', []))
+
+            next_page_token = response.get('next_page_token')
+            if not next_page_token:
+                break
+
+        return all_locations
+
+    def get_room_settings(self, room_id: str, setting_type: Optional[str] = None) -> Dict[str, Any]:
+        """
+        Get settings for a specific Zoom Room
+
+        Args:
+            room_id: Zoom Room ID
+            setting_type: Optional setting type filter (e.g., 'meeting', 'alert', 'audio')
+
+        Returns:
+            Room settings configuration
+        """
+        params = {}
+        if setting_type:
+            params['setting_type'] = setting_type
+
+        return self._make_request(f'/rooms/{room_id}/settings', params=params)
+
+    def update_room_settings(self, room_id: str, settings: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Update settings for a specific Zoom Room
+
+        Args:
+            room_id: Zoom Room ID
+            settings: Dictionary of settings to update
+
+        Returns:
+            Updated settings response
+        """
+        return self._make_request(f'/rooms/{room_id}/settings',
+                                  method='PATCH',
+                                  json_data=settings)
+
+    def get_room_events(self, room_id: str, from_date: str, to_date: str,
+                        page_size: int = 30) -> List[Dict[str, Any]]:
+        """
+        Get events for a specific Zoom Room
+
+        Args:
+            room_id: Zoom Room ID
+            from_date: Start date (YYYY-MM-DD)
+            to_date: End date (YYYY-MM-DD)
+            page_size: Number of events per page
+
+        Returns:
+            List of room events
+        """
+        all_events = []
+        next_page_token = None
+
+        while True:
+            params = {
+                'from': from_date,
+                'to': to_date,
+                'page_size': page_size
+            }
+            if next_page_token:
+                params['next_page_token'] = next_page_token
+
+            response = self._make_request(f'/rooms/{room_id}/events', params=params)
+            all_events.extend(response.get('events', []))
+
+            next_page_token = response.get('next_page_token')
+            if not next_page_token:
+                break
+
+        return all_events
+
+    def get_room_issues(self, room_id: str, from_date: str, to_date: str) -> Dict[str, Any]:
+        """
+        Get issues/problems for a specific Zoom Room
+
+        Args:
+            room_id: Zoom Room ID
+            from_date: Start date (YYYY-MM-DD)
+            to_date: End date (YYYY-MM-DD)
+
+        Returns:
+            Room issues and problems
+        """
+        params = {
+            'from': from_date,
+            'to': to_date
+        }
+        return self._make_request(f'/rooms/{room_id}/issues', params=params)
+
+    # ==================== Workspace Management Methods ====================
+
+    def get_workspaces(self, page_size: int = 30) -> List[Dict[str, Any]]:
+        """
+        Get list of all workspaces in the account
+
+        Args:
+            page_size: Number of workspaces per page (max 300)
+
+        Returns:
+            List of workspace objects
+        """
+        all_workspaces = []
+        next_page_token = None
+
+        while True:
+            params = {'page_size': page_size}
+            if next_page_token:
+                params['next_page_token'] = next_page_token
+
+            response = self._make_request('/rooms/workspaces', params=params)
+            all_workspaces.extend(response.get('workspaces', []))
+
+            next_page_token = response.get('next_page_token')
+            if not next_page_token:
+                break
+
+        return all_workspaces
+
+    def get_workspace_details(self, workspace_id: str) -> Dict[str, Any]:
+        """
+        Get detailed information about a specific workspace
+
+        Args:
+            workspace_id: Workspace ID
+
+        Returns:
+            Workspace details including configuration and capacity
+        """
+        return self._make_request(f'/rooms/workspaces/{workspace_id}')
+
+    def get_workspace_settings(self, workspace_id: str) -> Dict[str, Any]:
+        """
+        Get settings for a specific workspace
+
+        Args:
+            workspace_id: Workspace ID
+
+        Returns:
+            Workspace settings configuration
+        """
+        return self._make_request(f'/rooms/workspaces/{workspace_id}/settings')
+
+    def get_workspace_reservations(self, user_id: str, from_date: str, to_date: str) -> Dict[str, Any]:
+        """
+        Get workspace reservations for a specific user
+
+        Args:
+            user_id: User ID
+            from_date: Start date (YYYY-MM-DD)
+            to_date: End date (YYYY-MM-DD)
+
+        Returns:
+            List of workspace reservations
+        """
+        params = {
+            'from': from_date,
+            'to': to_date
+        }
+        return self._make_request(f'/rooms/workspaces/users/{user_id}/reservations', params=params)
+
     # ==================== Dashboard & Metrics Methods ====================
 
     def get_zoom_rooms_dashboard(self) -> Dict[str, Any]:
@@ -310,6 +501,109 @@ class ZoomAPIService:
                 })
 
         return comprehensive_data
+
+    def get_full_room_data(self, room_id: str, include_settings: bool = True,
+                           include_events: bool = False,
+                           include_issues: bool = False,
+                           date_range_days: int = 7) -> Dict[str, Any]:
+        """
+        Get complete data for a single Zoom Room from all available endpoints
+
+        Args:
+            room_id: Zoom Room ID
+            include_settings: Include room settings (default: True)
+            include_events: Include recent events (default: False)
+            include_issues: Include recent issues (default: False)
+            date_range_days: Number of days to look back for events/issues (default: 7)
+
+        Returns:
+            Comprehensive room data dictionary
+        """
+        from datetime import datetime, timedelta
+
+        # Calculate date range
+        to_date = datetime.now().strftime('%Y-%m-%d')
+        from_date = (datetime.now() - timedelta(days=date_range_days)).strftime('%Y-%m-%d')
+
+        # Collect all data
+        room_data = {
+            'id': room_id,
+            'timestamp': datetime.now().isoformat()
+        }
+
+        try:
+            # Basic room info
+            room_data['details'] = self.get_room_details(room_id)
+        except Exception as e:
+            room_data['details_error'] = str(e)
+
+        try:
+            # Device information
+            room_data['devices'] = self.get_room_devices(room_id)
+        except Exception as e:
+            room_data['devices_error'] = str(e)
+
+        if include_settings:
+            try:
+                room_data['settings'] = self.get_room_settings(room_id)
+            except Exception as e:
+                room_data['settings_error'] = str(e)
+
+        if include_events:
+            try:
+                room_data['events'] = self.get_room_events(room_id, from_date, to_date)
+            except Exception as e:
+                room_data['events_error'] = str(e)
+
+        if include_issues:
+            try:
+                room_data['issues'] = self.get_room_issues(room_id, from_date, to_date)
+            except Exception as e:
+                room_data['issues_error'] = str(e)
+
+        try:
+            # Metrics data
+            room_data['metrics'] = self.get_room_metrics(room_id, from_date, to_date)
+        except Exception as e:
+            room_data['metrics_error'] = str(e)
+
+        return room_data
+
+    def get_all_rooms_full_data(self, include_settings: bool = False,
+                                include_events: bool = False,
+                                include_issues: bool = False) -> List[Dict[str, Any]]:
+        """
+        Get comprehensive data for all Zoom Rooms (WARNING: API intensive)
+
+        Args:
+            include_settings: Include room settings for each room
+            include_events: Include recent events for each room
+            include_issues: Include recent issues for each room
+
+        Returns:
+            List of comprehensive room data dictionaries
+        """
+        rooms = self.get_zoom_rooms()
+        all_room_data = []
+
+        for room in rooms:
+            room_id = room.get('id')
+            try:
+                full_data = self.get_full_room_data(
+                    room_id,
+                    include_settings=include_settings,
+                    include_events=include_events,
+                    include_issues=include_issues
+                )
+                all_room_data.append(full_data)
+            except Exception as e:
+                all_room_data.append({
+                    'id': room_id,
+                    'name': room.get('name'),
+                    'error': str(e)
+                })
+
+        return all_room_data
 
     def get_room_health_summary(self) -> Dict[str, Any]:
         """
